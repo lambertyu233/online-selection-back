@@ -20,6 +20,12 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 #  password:
+  application:
+    name: manager
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
 
 # mybatis的配置
 #mybatis:

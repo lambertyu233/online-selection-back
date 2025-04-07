@@ -30,13 +30,13 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                 .addPathPatterns("/**");
     }
 
-    //跨域
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")      // 添加路径规则
-                .allowCredentials(true)               // 是否允许在跨域的情况下传递Cookie
-                .allowedOriginPatterns("*")           // 允许请求来源的域规则
-                .allowedMethods("*")
-                .allowedHeaders("*") ;                // 允许所有的请求头
-    }
+    //跨域  在网关配置里面统一解决了跨域，这里就不用重复解决了
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**")      // 添加路径规则
+//                .allowCredentials(true)               // 是否允许在跨域的情况下传递Cookie
+//                .allowedOriginPatterns("*")           // 允许请求来源的域规则
+//                .allowedMethods("*")
+//                .allowedHeaders("*") ;                // 允许所有的请求头
+//    }
 }
