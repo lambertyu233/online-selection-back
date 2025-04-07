@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.spzx.manager.mapper.SysMenuMapper">
+
+    <!--    根据用户id，查询可以操作的菜单-->
+    <select id="findMenusByUserId" resultType="com.atguigu.spzx.model.entity.system.SysMenu">
+        select distinct sm.* from sys_menu sm
+        inner join sys_role_menu srm on sm.id = srm.menu_id
+        inner join sys_user_role sur on srm.role_id = sur.role_id
+        where sur.user_id = #{userId} and sm.is_deleted = 0 and sur.is_deleted = 0 and srm.is_deleted = 0
+    </select>
+</mapper>

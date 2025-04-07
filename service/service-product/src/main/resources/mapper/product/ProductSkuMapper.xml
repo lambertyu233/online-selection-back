@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.spzx.product.mapper.ProductSkuMapper">
+
+    <select id="selectProductSkuBySal" resultType="com.atguigu.spzx.model.entity.product.ProductSku">
+        select ps.* from product_sku ps
+        inner join product  p on p.id = ps.product_id
+        where p.status = 1 and p.is_deleted = 0 and ps.is_deleted = 0
+        order by ps.sale_num desc
+        limit 10
+    </select>
+    <select id="selectByPage" resultType="com.atguigu.spzx.model.entity.product.ProductSku">
+        select * from product_sku ps
+        left join product p on p.id = ps.product_id
+        <where>
+            <if test="productSkuDto.keyword != null and productSkuDto.keyword != ''">
+                and ps.sku_name like concat('%',#{productSkuDto.keyword},'%')
+            </if>
+            <if test="productSkuDto.brandId != null and productSkuDto.brandId != ''">
+                and p.brand_id = #{productSkuDto.brandId}
+            </if>
+            <if test="productSkuDto.category1Id != null and productSkuDto.category1Id != ''">
+                and p.category1_id = #{productSkuDto.category1Id}
+            </if>
+            <if test="productSkuDto.category2Id != null and productSkuDto.category2Id != ''">
+                and p.category2_id = #{productSkuDto.category2Id}
+            </if>
+            <if test="productSkuDto.category3Id != null and productSkuDto.category3Id != ''">
+                and p.category3_id = #{productSkuDto.category3Id}
+            </if>
+        </where>
+    </select>
+</mapper>

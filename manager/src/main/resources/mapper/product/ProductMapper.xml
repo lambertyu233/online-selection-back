@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.spzx.manager.mapper.ProductMapper">
+
+    <select id="findByPage" resultType="com.atguigu.spzx.model.entity.product.Product">
+        select b.name as brandName,c1.name as category1Name,c2.name as category2Name,c3.name as category3Name,p.*
+        from product p
+        inner join brand b on p.brand_id = b.id
+        inner join category c1 on c1.id = p.category1_id
+        inner join category c2 on c2.id = p.category2_id
+        inner join category c3 on c3.id = p.category3_id
+        <where>
+            <if test="productDto.brandId != null and productDto.brandId != ''">
+                and p.brand_id = #{productDto.brandId}
+            </if>
+            <if test="productDto.category1Id != null and productDto.category1Id != ''">
+                and p.category1_id = #{productDto.category1Id}
+            </if>
+            <if test="productDto.category2Id != null and productDto.category2Id != ''">
+                and p.category2_id = #{productDto.category2Id}
+            </if>
+            <if test="productDto.category3Id != null and productDto.category3Id != ''">
+                and p.category3_id = #{productDto.category3Id}
+            </if>
+            and p.is_deleted = 0 and b.is_deleted = 0 and c1.is_deleted = 0
+        </where>
+        order by p.id asc
+    </select>
+</mapper>
