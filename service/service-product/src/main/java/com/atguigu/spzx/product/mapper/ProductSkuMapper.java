@@ -16,6 +16,5 @@ import java.util.List;
 
 public interface ProductSkuMapper extends BaseMapper<ProductSku> {
     List<ProductSku> selectProductSkuBySal();
-
-    IPage<ProductSku> selectByPage(Page<ProductSku> productSkuPage, ProductSkuDto productSkuDto);
+    List<ProductSku> selectByPage( IPage<ProductSku> page , ProductSkuDto productSkuDto);
 }

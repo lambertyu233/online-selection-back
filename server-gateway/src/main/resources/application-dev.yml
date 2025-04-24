@@ -20,12 +20,12 @@ spring:
             allowedHeaders: "*"        # 允许所有请求头
             allowedMethods: "*"        # 允许所有HTTP方法（GET/POST等）
             maxAge: 36000              # 预检请求缓存时间（秒）
-            allowCredentials: true  # 若前端需要传递 Cookie
+            allowCredentials: true  # 若前端需要传递 Cookie或者token
       routes:
         - id: service-product          # 路由ID（唯一标识）
           uri: lb://service-product    # 目标服务名（lb://表示负载均衡）
           predicates:
-            - Path=/*/product/**       # 路径匹配规则
+            - Path=/api/product/**       # 路径匹配规则
         - id: manager
           uri: lb://manager
           predicates:

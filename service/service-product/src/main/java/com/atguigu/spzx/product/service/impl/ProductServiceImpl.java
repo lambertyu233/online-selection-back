@@ -17,10 +17,10 @@ import com.atguigu.spzx.product.mapper.ProductMapper;
 import com.atguigu.spzx.product.mapper.ProductSkuMapper;
 import com.atguigu.spzx.product.service.ProductService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,10 +45,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductSkuVo findByPage(int page, int limit, ProductSkuDto productSkuDto) {
-        Page<ProductSku> productSkuPage = new Page<>(page, limit);
-        productSkuMapper.selectByPage(productSkuPage,productSkuDto);
+        IPage<ProductSku> productSkuPage = new Page<>(page, limit);
         ProductSkuVo productSkuVo = new ProductSkuVo();
-        productSkuVo.setList(productSkuPage.getRecords());
+        productSkuVo.setList(productSkuMapper.selectByPage(productSkuPage, productSkuDto));
         productSkuVo.setTotal(productSkuPage.getTotal());
         return productSkuVo;
     }

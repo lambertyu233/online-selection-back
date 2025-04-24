@@ -9,8 +9,8 @@ import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.CircleCaptcha;
 import com.atguigu.spzx.manager.service.ValidateCodeService;
 import com.atguigu.spzx.model.vo.system.ValidateCodeVo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ValidateCodeServiceImpl implements ValidateCodeService {
 
-    @Autowired
-    private RedisTemplate<String,String> redisTemplate;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     //生成图片验证码
     @Override
@@ -33,7 +33,7 @@ public class ValidateCodeServiceImpl implements ValidateCodeService {
         //2 把验证码存储到redis里，设置redis的key：uuid   redis的value：验证码值
         //设置过期时间
         String key = UUID.randomUUID().toString().replaceAll("-", "");
-        redisTemplate.opsForValue().set("user:validate"+key,codeValue,
+        stringRedisTemplate.opsForValue().set("user:validate"+key,codeValue,
                                         5, TimeUnit.MINUTES);//过期时间5，单位分钟
         //返回ValidateCodeVo对象
         ValidateCodeVo validateCodeVo = new ValidateCodeVo();

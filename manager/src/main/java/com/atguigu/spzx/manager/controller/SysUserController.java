@@ -13,6 +13,7 @@ import com.atguigu.spzx.model.vo.common.Result;
 import com.atguigu.spzx.model.vo.common.ResultCodeEnum;
 import com.atguigu.spzx.model.vo.system.SysUserVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,6 +49,7 @@ public class SysUserController {
     }
 
     @PostMapping("/doAssign")
+    @PreAuthorize("hasAuthority('ptgly')")
     public Result doAssign(@RequestBody AssignRoleDto assignRoleDto) {
         sysUserService.doAssign(assignRoleDto);
         return Result.build(null, ResultCodeEnum.SUCCESS);

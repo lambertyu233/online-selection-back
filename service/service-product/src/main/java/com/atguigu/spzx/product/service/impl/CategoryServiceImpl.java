@@ -35,11 +35,9 @@ public class CategoryServiceImpl implements CategoryService {
     public List<Category> selectOneCategory() {
         //1 查询redis，是否有所有一级分类
         String categoryOneJson = redisTemplate.opsForValue().get("category::one");
-//        System.out.println("categoryOneJson = " + categoryOneJson);
         //2 如果redis包含所有一级分类，直接返回
         if(StringUtils.hasText(categoryOneJson)){
             //categoryOneJson字符串转换List<Category>
-//            List<Category> categoryList = JSON.parseArray(categoryOneJson, Category.class);
             return JSON.parseArray(categoryOneJson, Category.class);
         }
         //3 如果redis没有所有一级分类，查询数据库，把查询内容返回，并且把内容放到redis里面
@@ -47,7 +45,6 @@ public class CategoryServiceImpl implements CategoryService {
         queryWrapper.eq("parent_id", 0);
         List<Category> categorylist = categoryMapper.selectList(queryWrapper);
         redisTemplate.opsForValue().set("category::one",JSON.toJSONString(categorylist),1, TimeUnit.DAYS);
-//        System.out.println(JSON.toJSONString(categorylist));
         return categorylist;
     }
 
