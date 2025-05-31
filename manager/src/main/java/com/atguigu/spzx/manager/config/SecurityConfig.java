@@ -28,7 +28,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/system/sysUser/**").hasAnyAuthority("ptgly","yhgly")
-                        .requestMatchers("/admin/system/sysRole/**","/admin/system/sysRoleMenu/**","/admin/system/sysMenu/**").hasAuthority("pygly")
+                        .requestMatchers("/admin/system/sysRole/**","/admin/system/sysRoleMenu/**","/admin/system/sysMenu/**").hasAuthority("ptgly")
                         .requestMatchers("/admin/product/**").hasAnyAuthority("ptgly","yhgly","xsry")
                         .anyRequest().permitAll()  // 其它接口使用注解的方式进行接口权限规定，这里全部放开
                 )

@@ -1,3 +1,14 @@
+# application.yml
 spring:
-  profiles:
-    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.200.129:8848
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        group: DEFAULT_GROUP
+        file-extension: yml
+  config:
+    import:
+      - optional:nacos:service-product.yml  # 使用optional:前缀表示非强制依赖
+      - optional:nacos:${spring.cloud.nacos.config.server-addr}  # 指定Nacos服务器地址

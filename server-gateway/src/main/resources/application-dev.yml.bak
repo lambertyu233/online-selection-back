@@ -6,7 +6,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: 192.168.200.129:8848
     gateway:
       discovery:
         locator:
@@ -16,7 +16,11 @@ spring:
           '[/**]': # 匹配所有路径
             allowedOriginPatterns:     # 允许前端来源跨域地址
               - "http://localhost:3001"  # 后台管理系统前端
+              - "http://172.30.197.119:3001"
+              - "http://10.13.217.195:3001"
               - "http://localhost"      # 用户使用前端
+              - "http://172.30.197.119"
+              - "http://10.13.217.195"
             allowedHeaders: "*"        # 允许所有请求头
             allowedMethods: "*"        # 允许所有HTTP方法（GET/POST等）
             maxAge: 36000              # 预检请求缓存时间（秒）
