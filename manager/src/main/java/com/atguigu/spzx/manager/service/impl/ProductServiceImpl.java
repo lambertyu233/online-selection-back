@@ -19,9 +19,12 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -32,7 +35,10 @@ public class ProductServiceImpl implements ProductService {
     private ProductSkuMapper productSkuMapper;
     @Autowired
     private ProductDetailsMapper productDetailsMapper;
+    @Autowired
+    private FileUploadServiceImpl fileUploadService;
 
+    //对产品名称，品牌名称，一级二级三级分类的分页查询
     @Override
     public ProductVo findByPage(int page, int limit, ProductDto productDto) {
         Page<Product> productPage = new Page<>(page, limit);
@@ -43,15 +49,22 @@ public class ProductServiceImpl implements ProductService {
         return productVo;
     }
 
+    //添加产品的所有详细信息
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void save(Product product) {
         productMapper.insert(product);
         String detailsImageUrls = product.getDetailsImageUrls();
-        if (detailsImageUrls != null && !detailsImageUrls.equals("")) {
-            ProductDetails productDetails = new ProductDetails();
-            productDetails.setProductId(product.getId());
-            productDetails.setImageUrls(detailsImageUrls);
-            productDetailsMapper.insert(productDetails);
+        try {
+            if (detailsImageUrls != null && !detailsImageUrls.isEmpty()) {
+                ProductDetails productDetails = new ProductDetails();
+                productDetails.setProductId(product.getId());
+                productDetails.setImageUrls(detailsImageUrls);
+                productDetailsMapper.insert(productDetails);
+            }
+        }catch (Exception e){
+            fileUploadService.deleteFile(detailsImageUrls);
+            throw e;
         }
         List<ProductSku> productSkuList = product.getProductSkuList();
         if (productSkuList != null && !productSkuList.isEmpty()) {
@@ -66,6 +79,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    //获取单个商品的图片详情列表，sku列表集合
     @Override
     public Product getById(Long id) {
         Product product = productMapper.selectById(id);
@@ -85,11 +99,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateById(Product product) {
         product.setUpdateTime(new Date());
         productMapper.updateById(product);
         ProductDetails productDetails = new ProductDetails();
-        String detailsImageUrls = product.getDetailsImageUrls();
+        //".*?spzx-bucket/([^,]+)" 会匹配从字符串开始到 spzx-bucket/ 后面直到逗号或字符串结束的所有内容，"$1" 表示用第一个捕获组的内容替换整个匹配的内容
+        String detailsImageUrls = product.getDetailsImageUrls().replaceAll(".*?-bucket/([^,]+)", "$1");
         productDetails.setImageUrls(detailsImageUrls);
         productDetails.setUpdateTime(new Date());
         UpdateWrapper<ProductDetails> updateWrapperDetails = new UpdateWrapper<>();
@@ -103,6 +119,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(Long id) {
         productMapper.deleteById(id);
         productDetailsMapper.delete(new QueryWrapper<ProductDetails>().eq("product_id", id));

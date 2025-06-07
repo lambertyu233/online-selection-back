@@ -16,6 +16,7 @@ import com.atguigu.spzx.product.mapper.ProductDetailsMapper;
 import com.atguigu.spzx.product.mapper.ProductMapper;
 import com.atguigu.spzx.product.mapper.ProductSkuMapper;
 import com.atguigu.spzx.product.service.ProductService;
+import com.atguigu.spzx.product.properties.MinioProperties;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -36,6 +38,8 @@ public class ProductServiceImpl implements ProductService {
     private ProductMapper productMapper;
     @Autowired
     private ProductDetailsMapper productDetailsMapper;
+    @Autowired
+    private MinioProperties minioProperties;
 
     @Override
     public List<ProductSku> selectProductSkuBySal() {
@@ -47,7 +51,12 @@ public class ProductServiceImpl implements ProductService {
     public ProductSkuVo findByPage(int page, int limit, ProductSkuDto productSkuDto) {
         IPage<ProductSku> productSkuPage = new Page<>(page, limit);
         ProductSkuVo productSkuVo = new ProductSkuVo();
-        productSkuVo.setList(productSkuMapper.selectByPage(productSkuPage, productSkuDto));
+        List<ProductSku> productSkus = productSkuMapper.selectByPage(productSkuPage, productSkuDto);
+        String prefix = minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/";
+        for(ProductSku productSku : productSkus){
+            productSku.setThumbImg(prefix + productSku.getThumbImg());
+        }
+        productSkuVo.setList(productSkus);
         productSkuVo.setTotal(productSkuPage.getTotal());
         return productSkuVo;
     }
@@ -62,11 +71,18 @@ public class ProductServiceImpl implements ProductService {
         Long productId = productSku.getProductId();
         //4 从productId获取商品详情信息
         Product product = productMapper.selectById(productId);
-        String[] sliderUrlsSplit = product.getSliderUrls().split(",");
+        String prefix = minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/";
+        List<String> sliderUrlList = Arrays.stream(product.getSliderUrls().split(","))
+                .map(String::trim) // 去除空格
+                .map(link -> prefix + link) // 添加前缀
+                .collect(Collectors.toList());// 收集为 List
         ProductDetails productDetails = productDetailsMapper.selectOne(new QueryWrapper<ProductDetails>().eq("product_id", productId));
-        String[] split = productDetails.getImageUrls().split(",");
+        List<String> detailsImageUrlList = Arrays.stream(productDetails.getImageUrls().split(","))
+                .map(String::trim) // 去除空格
+                .map(link -> prefix + link) // 添加前缀
+                .collect(Collectors.toList());// 收集为 List
         //5 封装map集合 == 商品规格对应商品skuId信息
-        Map<String,Object> skuSpecValueMap = new HashMap<String,Object>();
+        Map<String,Object> skuSpecValueMap = new HashMap<>();
         //根据商品id获取商品所有sku列表
         List<ProductSku> productSkus = productSkuMapper.selectList(new QueryWrapper<ProductSku>().eq("product_id", productId));
         for (ProductSku productSku1 : productSkus) {
@@ -75,8 +91,8 @@ public class ProductServiceImpl implements ProductService {
         //6 把需要数据封装到ProductItemVo里面
         productItemVo.setProductSku(productSku);
         productItemVo.setProduct(product);
-        productItemVo.setSliderUrlList(Arrays.asList(sliderUrlsSplit));
-        productItemVo.setDetailsImageUrlList(Arrays.asList(split));
+        productItemVo.setSliderUrlList(sliderUrlList);
+        productItemVo.setDetailsImageUrlList(detailsImageUrlList);
         productItemVo.setSkuSpecValueMap(skuSpecValueMap);
         productItemVo.setSpecValueList(JSON.parseArray(product.getSpecValue()));
         return productItemVo;

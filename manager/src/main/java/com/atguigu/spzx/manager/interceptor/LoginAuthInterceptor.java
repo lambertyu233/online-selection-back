@@ -45,7 +45,7 @@ public class LoginAuthInterceptor implements HandlerInterceptor {
         //4 如果token不为空，拿着token查询redis
         String userInfoString = stringRedisTemplate.opsForValue().get("user:login" + token);
         //5 如果redis查询不到数据，返回错误提示
-        if(StrUtil.isEmpty(token)){
+        if(StrUtil.isEmpty(userInfoString)){
             responseNoLoginInfo(response);
             return false;
         }

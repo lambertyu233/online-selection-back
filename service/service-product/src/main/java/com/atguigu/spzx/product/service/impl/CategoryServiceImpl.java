@@ -8,6 +8,7 @@ package com.atguigu.spzx.product.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.spzx.model.entity.product.Category;
 import com.atguigu.spzx.product.mapper.CategoryMapper;
+import com.atguigu.spzx.product.properties.MinioProperties;
 import com.atguigu.spzx.product.service.CategoryService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryMapper categoryMapper;
     @Autowired
     private RedisTemplate<String,String> redisTemplate;
+    @Autowired
+    private MinioProperties minioProperties;
 
 //    获取全部一级菜单
 //    现用redis缓存进行改造，提升页面的加载速度
@@ -54,8 +57,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<Category> findCategoryTree() {
         List<Category> categoryList = categoryMapper.selectList(null);
+        String prefix = minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/";
         List<Category> categoryTree = new ArrayList<>();
         for(Category category : categoryList){
+            category.setImageUrl(prefix + category.getImageUrl());
             if(category.getParentId() == 0){
                 categoryTree.add(buildTree(category, categoryList));
             }
