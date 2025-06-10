@@ -1,6 +1,7 @@
 package com.atguigu.spzx.product.controller;
 
 import com.atguigu.spzx.model.dto.h5.ProductSkuDto;
+import com.atguigu.spzx.model.entity.product.ProductSku;
 import com.atguigu.spzx.model.vo.common.Result;
 import com.atguigu.spzx.model.vo.common.ResultCodeEnum;
 import com.atguigu.spzx.model.vo.h5.ProductItemVo;
@@ -35,5 +36,11 @@ public class ProductController {
     public Result item(@PathVariable Long skuId) {
         ProductItemVo productItemVo = productService.item(skuId);
         return Result.build(productItemVo, ResultCodeEnum.SUCCESS);
+    }
+
+    //远程调用，根据skuid获取商品信息
+    @GetMapping("/getBySkuId/{skuId}")
+    public ProductSku getBySkuId(@PathVariable Long skuId) {
+        return productService.getBySkuId(skuId);
     }
 }

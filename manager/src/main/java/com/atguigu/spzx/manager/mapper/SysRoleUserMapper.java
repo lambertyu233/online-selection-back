@@ -7,11 +7,9 @@ package com.atguigu.spzx.manager.mapper;
  */
 import com.atguigu.spzx.model.entity.system.SysRoleUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
 
-@Mapper
 public interface SysRoleUserMapper extends BaseMapper<SysRoleUser> {
     //查询该角色的所有角色
     List<String> selectRoleCodesByUserId(Long userId);

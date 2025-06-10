@@ -1,6 +1,7 @@
 package com.atguigu.spzx.model.entity.user;
 
 import com.atguigu.spzx.model.entity.base.BaseEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -8,6 +9,7 @@ import java.util.Date;
 
 @Data
 @Schema(description = "用户实体类")
+@TableName("user_info")
 public class UserInfo extends BaseEntity {
 
    private static final long serialVersionUID = 1L;

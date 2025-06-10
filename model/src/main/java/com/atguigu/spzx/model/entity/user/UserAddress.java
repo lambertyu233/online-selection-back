@@ -1,11 +1,13 @@
 package com.atguigu.spzx.model.entity.user;
 
 import com.atguigu.spzx.model.entity.base.BaseEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 @Schema(description = "用户地址实体类")
+@TableName("user_address")
 public class UserAddress extends BaseEntity {
 
    private static final long serialVersionUID = 1L;

@@ -44,6 +44,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductSku> selectProductSkuBySal() {
         List<ProductSku> productSkus = productSkuMapper.selectProductSkuBySal();
+        String prefix = minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/";
+        for(ProductSku productSku : productSkus){
+            productSku.setThumbImg(prefix + productSku.getThumbImg());
+        }
         return productSkus;
     }
 
@@ -96,5 +100,10 @@ public class ProductServiceImpl implements ProductService {
         productItemVo.setSkuSpecValueMap(skuSpecValueMap);
         productItemVo.setSpecValueList(JSON.parseArray(product.getSpecValue()));
         return productItemVo;
+    }
+
+    @Override
+    public ProductSku getBySkuId(Long skuId) {
+        return productSkuMapper.selectById(skuId);
     }
 }

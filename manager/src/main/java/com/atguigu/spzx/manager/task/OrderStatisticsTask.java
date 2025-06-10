@@ -24,6 +24,7 @@ public class OrderStatisticsTask {
     private OrderStatisticsMapper orderStatisticsMapper;
 
     //每天凌晨2点，查询前一天统计数据，把统计之后的数据添加到统计结果表里
+    //@Scheduled(cron = "0/10 8 * * * ?")//测试用，每十秒一次
     @Scheduled(cron = "0 0 2 * * ?")
     public void orderTotalAmountStatistics(){
         //1 获取前一天的日期

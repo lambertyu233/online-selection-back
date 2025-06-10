@@ -19,4 +19,6 @@ public interface ProductService {
 
     ProductItemVo item(Long skuId);
 
+    ProductSku getBySkuId(Long skuId);
+
 }

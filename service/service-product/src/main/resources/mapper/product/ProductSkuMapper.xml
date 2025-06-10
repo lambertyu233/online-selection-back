@@ -16,6 +16,7 @@
         select * from product_sku ps
         left join product p on p.id = ps.product_id
         <where>
+            p.status = 1 and p.is_deleted = 0 and ps.is_deleted = 0
             <if test="productSkuDto.keyword != null and productSkuDto.keyword != ''">
                 and ps.sku_name like concat('%',#{productSkuDto.keyword},'%')
             </if>

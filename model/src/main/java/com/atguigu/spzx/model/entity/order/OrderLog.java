@@ -1,11 +1,13 @@
 package com.atguigu.spzx.model.entity.order;
 
 import com.atguigu.spzx.model.entity.base.BaseEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 @Schema(description = "订单日志实体对象")
+@TableName("order_log")
 public class OrderLog extends BaseEntity {
 
    private static final long serialVersionUID = 1L;

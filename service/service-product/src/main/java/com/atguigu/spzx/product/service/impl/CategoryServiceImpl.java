@@ -47,6 +47,10 @@ public class CategoryServiceImpl implements CategoryService {
         QueryWrapper<Category> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("parent_id", 0);
         List<Category> categorylist = categoryMapper.selectList(queryWrapper);
+        String prefix = minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/";
+        for(Category category : categorylist){
+            category.setImageUrl(prefix + category.getImageUrl());
+        }
         redisTemplate.opsForValue().set("category::one",JSON.toJSONString(categorylist),1, TimeUnit.DAYS);
         return categorylist;
     }

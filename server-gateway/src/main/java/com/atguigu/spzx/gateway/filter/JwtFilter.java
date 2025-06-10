@@ -1,18 +1,27 @@
 package com.atguigu.spzx.gateway.filter;
 
+import com.alibaba.fastjson.JSONObject;
+import com.atguigu.spzx.model.entity.user.UserInfo;
+import com.atguigu.spzx.model.vo.common.Result;
+import com.atguigu.spzx.model.vo.common.ResultCodeEnum;
 import com.atguigu.spzx.utils.JwtTokenUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +33,28 @@ import java.util.List;
 @Component
 public class JwtFilter implements GlobalFilter, Ordered {
 
-    @Resource
+    @Autowired
     private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         List<String> authHeader = request.getHeaders().get("Authorization");
+
+        String path = request.getURI().getPath();
+        //判断路径 /api/**/auth/**，登录校验
+        if(antPathMatcher.match("/api/**/auth/**",path)){
+            //登录校验
+            UserInfo userInfo = this.getUserInfo(request);
+            if(userInfo == null){
+                ServerHttpResponse response = exchange.getResponse();
+                return out(response,ResultCodeEnum.LOGIN_AUTH);
+            }
+        }
 
         if (authHeader != null && !authHeader.isEmpty() && authHeader.get(0).startsWith("Bearer ")) {
             String token = authHeader.get(0).substring(7);
@@ -49,6 +73,23 @@ public class JwtFilter implements GlobalFilter, Ordered {
             }
         }
         return chain.filter(exchange);
+    }
+
+    private UserInfo getUserInfo(ServerHttpRequest request) {
+        String token = "";
+        List<String> tokenList = request.getHeaders().get("token");
+        if(tokenList != null && !tokenList.isEmpty()){
+            token = tokenList.get(0);
+        }
+        if(token != null && !token.isEmpty()){
+            String userJson = stringRedisTemplate.opsForValue().get("user:login:" + token);
+            if(userJson == null || userJson.isEmpty()){
+                return null;
+            }else {
+                return JSONObject.parseObject(userJson, UserInfo.class);
+            }
+        }
+        return null;
     }
 
     private List<String> extractAuthorities(Claims claims) {
@@ -78,6 +119,15 @@ public class JwtFilter implements GlobalFilter, Ordered {
         return exchange.getResponse().writeWith(
                 Mono.just(exchange.getResponse().bufferFactory().wrap(message.getBytes()))
         );
+    }
+
+    private Mono<Void> out(ServerHttpResponse response, ResultCodeEnum resultCodeEnum) {
+        Result result = Result.build(null, resultCodeEnum);
+        byte[] bits = JSONObject.toJSONString(result).getBytes(StandardCharsets.UTF_8);
+        DataBuffer buffer = response.bufferFactory().wrap(bits);
+        //指定编码，否则在浏览器中中文会乱码
+        response.getHeaders().add("Content-Type", "application/json; charset=utf-8");
+        return response.writeWith(Mono.just(buffer));
     }
 
     @Override

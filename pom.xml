@@ -21,7 +21,6 @@
         <module>manager</module>
         <module>server-gateway</module>
         <module>service</module>
-        <module>service/service-order</module>
         <module>service-client</module>
     </modules>
 
