@@ -1,6 +1,7 @@
 package com.atguigu.spzx.model.entity.pay;
 
 import com.atguigu.spzx.model.entity.base.BaseEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import java.util.Date;
 
 @Data
 @Schema(description = "支付信息实体类")
+@TableName("payment_info")
 public class PaymentInfo extends BaseEntity {
 
    private static final long serialVersionUID = 1L;

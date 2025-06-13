@@ -19,6 +19,9 @@ import com.atguigu.spzx.order.mapper.OrderInfoMapper;
 import com.atguigu.spzx.order.mapper.OrderItemMapper;
 import com.atguigu.spzx.order.mapper.OrderLogMapper;
 import com.atguigu.spzx.order.service.OrderInfoService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -137,6 +140,7 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         //添加List<OrderItem>里面数据,把集合每个orderItem添加表
         for (OrderItem orderItem : orderItemList) {
             orderItem.setOrderId(orderInfo.getId());
+//            orderItem.setThumbImg(orderItem.getThumbImg().replaceAll(".*?-bucket/([^,]+)", "$1"));
             orderItemMapper.insert(orderItem);
         }
         //6 添加数据到order_Log表
@@ -149,5 +153,89 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         cartFeignClient.deleteChecked(token);
         //8 返回订单id
         return orderInfo.getId();
+    }
+
+    @Override
+    public OrderInfo getOrderInfo(Long orderId) {
+        return orderInfoMapper.selectById(orderId);
+    }
+
+    @Override
+    public TradeVo buy(Long skuId) {
+        // 查询商品
+        ProductSku productSku = productFeignClient.getBySkuId(skuId);
+        List<OrderItem> orderItemList = new ArrayList<>();
+        OrderItem orderItem = new OrderItem();
+        orderItem.setSkuId(skuId);
+        orderItem.setSkuName(productSku.getSkuName());
+        orderItem.setSkuNum(1);
+        orderItem.setSkuPrice(productSku.getSalePrice());
+        orderItem.setThumbImg("http://192.168.200.129:9000/spzx-bucket/"+productSku.getThumbImg());
+        orderItemList.add(orderItem);
+
+        // 计算总金额
+        BigDecimal totalAmount = productSku.getSalePrice();
+        TradeVo tradeVo = new TradeVo();
+        tradeVo.setTotalAmount(totalAmount);
+        tradeVo.setOrderItemList(orderItemList);
+
+        // 返回
+        return tradeVo;
+    }
+
+    @Override
+    public PageInfo<OrderInfo> findUserPage(Integer page, Integer limit, Integer orderStatus, String token) {
+        PageHelper.startPage(page, limit);
+        String info = stringRedisTemplate.opsForValue().get("user:login:" + token);
+        if(!StringUtils.hasText(info)){
+            throw new GuiguException(ResultCodeEnum.LOGIN_AUTH);
+        }
+        UserInfo userInfo = JSON.parseObject(info, UserInfo.class);
+        Long userId = userInfo.getId();
+        LambdaQueryWrapper<OrderInfo> orderInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderInfoLambdaQueryWrapper.eq(OrderInfo::getUserId, userId)
+                .eq(orderStatus != null, OrderInfo::getOrderStatus, orderStatus)
+                .orderByDesc(OrderInfo::getCreateTime);
+        List<OrderInfo> orderInfoList = orderInfoMapper.selectList(orderInfoLambdaQueryWrapper);
+
+        orderInfoList.forEach(orderInfo -> {
+            LambdaQueryWrapper<OrderItem> orderItemLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderItemLambdaQueryWrapper.eq(OrderItem::getOrderId, orderInfo.getId());
+            List<OrderItem> orderItem = orderItemMapper.selectList(orderItemLambdaQueryWrapper);
+            orderInfo.setOrderItemList(orderItem);
+        });
+        return new PageInfo<>(orderInfoList);
+    }
+
+    @Override
+    public OrderInfo getOrderInfoByOrderNo(String orderNo) {
+        LambdaQueryWrapper<OrderInfo> orderInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderInfoLambdaQueryWrapper.eq(OrderInfo::getOrderNo, orderNo);
+        OrderInfo orderInfo = orderInfoMapper.selectOne(orderInfoLambdaQueryWrapper);
+        LambdaQueryWrapper<OrderItem> orderItemLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderItemLambdaQueryWrapper.eq(OrderItem::getOrderId, orderInfo.getId());
+        List<OrderItem> orderItemList = orderItemMapper.selectList(orderItemLambdaQueryWrapper);
+        orderInfo.setOrderItemList(orderItemList);
+        return orderInfo;
+    }
+
+    @Transactional
+    @Override
+    public void updateOrderStatus(String orderNo) {
+
+        // 更新订单状态
+        LambdaQueryWrapper<OrderInfo> orderInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderInfoLambdaQueryWrapper.eq(OrderInfo::getOrderNo, orderNo);
+        OrderInfo orderInfo = orderInfoMapper.selectOne(orderInfoLambdaQueryWrapper);
+        orderInfo.setOrderStatus(1);
+        orderInfo.setPaymentTime(new Date());
+        orderInfoMapper.updateById(orderInfo);
+
+        // 记录日志
+        OrderLog orderLog = new OrderLog();
+        orderLog.setOrderId(orderInfo.getId());
+        orderLog.setProcessStatus(1);
+        orderLog.setNote("支付宝支付成功");
+        orderLogMapper.insert(orderLog);
     }
 }

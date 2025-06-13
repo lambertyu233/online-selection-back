@@ -14,6 +14,7 @@ import com.atguigu.spzx.model.entity.product.Product;
 import com.atguigu.spzx.model.entity.product.ProductDetails;
 import com.atguigu.spzx.model.entity.product.ProductSku;
 import com.atguigu.spzx.model.vo.product.ProductVo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -108,9 +109,15 @@ public class ProductServiceImpl implements ProductService {
         String detailsImageUrls = product.getDetailsImageUrls().replaceAll(".*?-bucket/([^,]+)", "$1");
         productDetails.setImageUrls(detailsImageUrls);
         productDetails.setUpdateTime(new Date());
-        UpdateWrapper<ProductDetails> updateWrapperDetails = new UpdateWrapper<>();
-        updateWrapperDetails.eq("product_id", product.getId());
-        productDetailsMapper.update(productDetails,updateWrapperDetails);
+        LambdaQueryWrapper<ProductDetails> queryWrapperDetail = new LambdaQueryWrapper();
+        queryWrapperDetail.eq(ProductDetails::getProductId, product.getId());
+        ProductDetails productDetails1 = productDetailsMapper.selectOne(queryWrapperDetail);
+        if(productDetails1 != null){
+            productDetailsMapper.update(productDetails, queryWrapperDetail);
+        }else {
+            productDetails.setProductId(product.getId());
+            productDetailsMapper.insert(productDetails);
+        }
         List<ProductSku> productSkuList = product.getProductSkuList();
         for (ProductSku productSku : productSkuList) {
             productSku.setUpdateTime(new Date());

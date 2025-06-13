@@ -7,6 +7,7 @@ package com.atguigu.spzx.product.service.impl;
  */
 import com.alibaba.fastjson.JSON;
 import com.atguigu.spzx.model.dto.h5.ProductSkuDto;
+import com.atguigu.spzx.model.dto.product.SkuSaleDto;
 import com.atguigu.spzx.model.entity.product.Product;
 import com.atguigu.spzx.model.entity.product.ProductDetails;
 import com.atguigu.spzx.model.entity.product.ProductSku;
@@ -18,10 +19,13 @@ import com.atguigu.spzx.product.mapper.ProductSkuMapper;
 import com.atguigu.spzx.product.service.ProductService;
 import com.atguigu.spzx.product.properties.MinioProperties;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -105,5 +109,20 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductSku getBySkuId(Long skuId) {
         return productSkuMapper.selectById(skuId);
+    }
+
+    @Transactional
+    @Override
+    public Boolean updateSkuSaleNum(List<SkuSaleDto> skuSaleDtoList) {
+        if(!CollectionUtils.isEmpty(skuSaleDtoList)) {
+            for(SkuSaleDto skuSaleDto : skuSaleDtoList) {
+                LambdaUpdateWrapper<ProductSku> productSkuLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                productSkuLambdaUpdateWrapper.eq(ProductSku::getId, skuSaleDto.getSkuId())
+                        .setSql("sale_num = sale_num + " + skuSaleDto.getNum())
+                        .setSql("stock_num = stock_num - " + skuSaleDto.getNum());
+                productSkuMapper.update(null, productSkuLambdaUpdateWrapper);
+            }
+        }
+        return true;
     }
 }
